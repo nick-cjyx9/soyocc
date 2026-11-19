@@ -2,6 +2,9 @@
 #define NOB_WARN_DEPRECATED
 #include <string.h>
 #include "nob.h"
+#ifndef nob_zig_cc
+#define nob_zig_cc(cmd) nob_cmd_append(cmd, "zig", "cc")
+#endif // nob_zig_cc
 
 #define BUILD_FOLDER "build/"
 #define SRC_FOLDER "src/"
@@ -31,7 +34,7 @@ bool run_tests(Nob_Walk_Entry entry)
             strcat(output_path, BUILD_FOLDER);
             strcat(output_path, (const char *)bin_path);
             Cmd cmd = {0};
-            nob_cc(&cmd);
+            nob_zig_cc(&cmd);
             nob_cc_flags(&cmd);
             nob_cc_output(&cmd, output_path);
             nob_cc_inputs(&cmd, entry.path);
@@ -96,7 +99,7 @@ int main(int argc, char **argv)
     Cmd cmd = {0};
 
     mkdir_if_not_exists(BUILD_FOLDER);
-    nob_cc(&cmd);
+    nob_zig_cc(&cmd);
     nob_cc_flags(&cmd);
     if (DEBUG_MODE)
         nob_cmd_append(&cmd, "-ggdb");

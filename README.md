@@ -23,6 +23,7 @@ cc -o nob nob.c && ./nob
 - chibicc: <https://github.com/rui314/chibicc>
 - chibicc 作者的书：<https://www.sigbus.info/compilerbook>
 - MaxXing 的北大编译实践 lab: <https://pku-minic.github.io/online-doc/#/>
+- 如何避免所有内存泄漏 | Tsoding: <https://www.bilibili.com/video/BV1e2UgBrEPY/>
 - <https://github.com/tsoding/nob.h>
 - <https://satgo1546.github.io/archives/pku-minic/>
 - <https://godbolt.org/>
