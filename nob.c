@@ -39,10 +39,13 @@ bool run_tests(Nob_Walk_Entry entry)
                 nob_log(NOB_ERROR, "compile failed when handling with %s", entry.path);
             // run test
             nob_cmd_append(&cmd, output_path);
-            if (!cmd_run(&cmd))
-                nob_log(NOB_ERROR, "TEST: %s test fails.", entry.path);
+            if (cmd_run(&cmd))
+                nob_log(NOB_INFO, "TEST: %s passes.", entry.path);
             else
-                nob_log(NOB_INFO, "TEST: %s test passes.", entry.path);
+            {
+                *(bool *)(entry.data) = false;
+                nob_log(NOB_ERROR, "TEST: %s fails.", entry.path);
+            }
         }
     }
     return true;
@@ -89,6 +92,7 @@ int main(int argc, char **argv)
         }
     }
     // 正常编译
+    printf("Now compiling soyocc...\n");
     Cmd cmd = {0};
 
     mkdir_if_not_exists(BUILD_FOLDER);
@@ -105,19 +109,34 @@ int main(int argc, char **argv)
     {
         mkdir_if_not_exists(TEST_FOLDER);
         mkdir_if_not_exists(BUILD_FOLDER TEST_FOLDER);
+        printf("\nNow running tests...\n");
+        bool success = true;
         const char *test_dir = TEST_FOLDER;
-        if (!nob_walk_dir(test_dir, run_tests))
+        if (!nob_walk_dir(test_dir, run_tests, .data = &success))
+        {
+            nob_log(NOB_ERROR, "Failed to walk through test directory: %s", test_dir);
             return 1;
+        }
+        if (success)
+        {
+            printf("\nAll tests passed!\n");
+            return 0;
+        }
+        else
+        {
+            printf("\nSome tests failed!\n");
+            return 1;
+        }
     }
 
     if (RUN_MODE)
     {
+        printf("\nNow running soyocc...\n");
         nob_cmd_append(&cmd, BUILD_FOLDER "soyocc");
         for (int i = 2; i < argc; i++)
             nob_cmd_append(&cmd, argv[i]);
         if (!cmd_run(&cmd))
             return 1;
     }
-
     return 0;
 }

@@ -8,10 +8,6 @@
 
 int EXIT_CODE = 0;
 
-/**
- * assert given condition, if false, print message and
- * abort. (will return code 134)
- */
 #define assert(condition, ...)                           \
   do                                                     \
   {                                                      \
@@ -22,5 +18,8 @@ int EXIT_CODE = 0;
       EXIT_CODE = 1;                                     \
     }                                                    \
   } while (0)
+
+#define tassert(condition) \
+  assert(condition, "Expect " #condition " to be true, but fails at %s:%d", __FILE__, __LINE__); // 测试加减法表达式的返回值
 
 #endif
