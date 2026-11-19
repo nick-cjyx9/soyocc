@@ -3,16 +3,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
-// 用于报告错误的宏
+// 输入程序
+char *user_input;
+
+// 用于报告错误的函数，宏类型定义太弱故切换到可接受剩余参数的函数
 // 接受与 printf 相同的参数
-#define error(fmt, ...)                              \
-  do                                                 \
-  {                                                  \
-    fprintf(stderr, fmt __VA_OPT__(, ) __VA_ARGS__); \
-    fprintf(stderr, "\n");                           \
-    exit(1);                                         \
-  } while (0)
+void error_at(char *loc, char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+
+  int pos = loc - user_input;
+  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%*s", pos, " "); // 输出 pos 个空格
+  fprintf(stderr, "^ ");
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
 
 // token 的种类
 typedef enum
@@ -52,7 +62,7 @@ bool consume(char op)
 void expect(char op)
 {
   if (token->kind != TK_RESERVED || token->str[0] != op)
-    error("期待得到'%c', 实际却为'%c'", op, token->str[0]);
+    error_at(&token->str[0], "期待得到'%c', 实际却为'%c'", op, token->str[0]);
   token = token->next;
 }
 
@@ -61,7 +71,7 @@ void expect(char op)
 int expect_number()
 {
   if (token->kind != TK_NUM)
-    error("期待得到数字, 实际却为'%c'", token->str[0]);
+    error_at(&token->str[0], "期待得到数字, 实际却为'%c'", token->str[0]);
   int val = token->val;
   token = token->next;
   return val;
@@ -110,7 +120,7 @@ Token *tokenize(char *p)
       // strtol 会将 p 移动到未处理的第一个字符上，所以不需要手动移动 p
       continue;
     }
-    error("无法识别的 token: '%c'", *p);
+    error_at(p, "无法识别的 token: '%c'", *p);
   }
   new_token(TK_EOF, cur, p);
   return head.next;
@@ -120,11 +130,12 @@ int main(int argc, char **argv)
 {
   if (argc != 2)
   {
-    error("参数错误");
+    fprintf(stderr, "参数错误\n");
     return 1;
   }
 
-  token = tokenize(argv[1]);
+  user_input = argv[1];
+  token = tokenize(user_input);
 
   printf(".intel_syntax noprefix\n");
   printf(".globl main\n");

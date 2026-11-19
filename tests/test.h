@@ -20,6 +20,6 @@ int EXIT_CODE = 0;
   } while (0)
 
 #define tassert(condition) \
-  assert(condition, "Expect " #condition " to be true, but fails at %s:%d", __FILE__, __LINE__); // 测试加减法表达式的返回值
+  assert(condition, "Expect " #condition " to be true, but fails at %s:%d", __FILE__, __LINE__);
 
 #endif
