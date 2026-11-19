@@ -104,7 +104,11 @@ int main(int argc, char **argv)
     if (DEBUG_MODE)
         nob_cmd_append(&cmd, "-ggdb");
     nob_cc_output(&cmd, BUILD_FOLDER "soyocc");
-    nob_cc_inputs(&cmd, SRC_FOLDER "soyocc.c");
+    nob_cc_inputs(&cmd,
+                  SRC_FOLDER "soyocc.c",
+                  SRC_FOLDER "tokenize.c",
+                  SRC_FOLDER "parse.c",
+                  SRC_FOLDER "codegen.c");
     if (!cmd_run(&cmd))
         return 1;
 
