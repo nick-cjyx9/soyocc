@@ -8,7 +8,7 @@ soyocc 使用 [nob.h](https://github.com/tsoding/nob.h) 作为构建系统
 
 ```bash
 $ cc -o nob nob.c && ./nob -h
-Usage: ./nob [-h | --help] [-d | --debug]
+Usage: ./nob [-h | --help] [-d | --debug] [run | test | compdb]
   这个程序被用于便捷地编译 soyocc 以及编译运行其测试
   -h, --help    显示帮助信息
   -d, --debug   编译 soyocc 二进制时附加调试信息
@@ -16,6 +16,7 @@ Usage: ./nob [-h | --help] [-d | --debug]
 子命令:
   run           编译 soyocc 并运行
   test          编译 soyocc 及其测试并运行测试
+  compdb        只生成 build/compile_commands.json（给 clangd 用）
 ```
 
 只需要编译一次，后续向 `nob.c` 写入更改后，运行 `./nob` 会自动重编译自身。

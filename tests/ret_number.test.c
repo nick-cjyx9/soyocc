@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 
-int main()
-{
+int main() {
   system(SOYOCC_BIN " 67 > temp.s");
   system("cc temp.s -o temp");
   // https://chatgpt.com/share/6afe66cc-bebc-83ea-af56-75c2599c8270

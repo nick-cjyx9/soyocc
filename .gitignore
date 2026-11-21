@@ -1,8 +1,6 @@
+build/
+.cache/
 nob
 nob.old
 .gdb_history
-
-# 676767
-
-book/
-build/
+.wsl-dev
