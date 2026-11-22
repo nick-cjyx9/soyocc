@@ -18,8 +18,7 @@ static const char *const SOURCES[] = {
     SRC_FOLDER "codegen.c",
 };
 
-bool is_test_c(const char *path)
-{
+bool is_test_c(const char *path) {
   const char *ext = ".test.c";
   size_t path_len = strlen(path);
   size_t ext_len = strlen(ext);
@@ -27,13 +26,10 @@ bool is_test_c(const char *path)
   return path_len >= ext_len && strcmp(path + path_len - ext_len, ext) == 0;
 }
 
-bool run_tests(Nob_Walk_Entry entry)
-{
-  if (entry.type == NOB_FILE_REGULAR)
-  {
+bool run_tests(Nob_Walk_Entry entry) {
+  if (entry.type == NOB_FILE_REGULAR) {
     // if it's a .test.c file, compile it
-    if (is_test_c(entry.path))
-    {
+    if (is_test_c(entry.path)) {
       char *bin_path = strdup(entry.path);
       char *dot = strrchr(bin_path, '.');
       *dot = '\0';
@@ -51,8 +47,7 @@ bool run_tests(Nob_Walk_Entry entry)
       nob_cmd_append(&cmd, output_path);
       if (cmd_run(&cmd))
         nob_log(NOB_INFO, "TEST: %s passes.", entry.path);
-      else
-      {
+      else {
         *(bool *)(entry.data) = false;
         nob_log(NOB_ERROR, "TEST: %s fails.", entry.path);
       }
@@ -61,8 +56,7 @@ bool run_tests(Nob_Walk_Entry entry)
   return true;
 }
 
-void print_help(char *prog_name)
-{
+void print_help(char *prog_name) {
   printf("Usage: %s [-h | --help] [-d | --debug] [run | test | compdb]\n"
          "  这个程序被用于便捷地编译 soyocc 以及编译运行其测试\n"
          "  -h, --help    显示帮助信息\n"
@@ -75,13 +69,10 @@ void print_help(char *prog_name)
          prog_name);
 }
 
-static void sb_append_json_string(Nob_String_Builder *sb, const char *s)
-{
+static void sb_append_json_string(Nob_String_Builder *sb, const char *s) {
   nob_sb_append_cstr(sb, "\"");
-  for (const char *p = s; *p != '\0'; ++p)
-  {
-    switch (*p)
-    {
+  for (const char *p = s; *p != '\0'; ++p) {
+    switch (*p) {
     case '\"':
       nob_sb_append_cstr(sb, "\\\"");
       break;
@@ -105,11 +96,9 @@ static void sb_append_json_string(Nob_String_Builder *sb, const char *s)
   nob_sb_append_cstr(sb, "\"");
 }
 
-bool write_compdb(void)
-{
+bool write_compdb(void) {
   const char *dir = nob_get_current_dir_temp();
-  if (dir == NULL)
-  {
+  if (dir == NULL) {
     nob_log(NOB_ERROR, "无法获取当前工作目录");
     return false;
   }
@@ -118,8 +107,7 @@ bool write_compdb(void)
 
   Nob_String_Builder sb = {0};
   nob_sb_append_cstr(&sb, "[\n");
-  for (size_t i = 0; i < NOB_ARRAY_LEN(SOURCES); ++i)
-  {
+  for (size_t i = 0; i < NOB_ARRAY_LEN(SOURCES); ++i) {
     Cmd cmd = {0};
     soyo_cc(&cmd);
     nob_cc_flags(&cmd);
@@ -130,8 +118,7 @@ bool write_compdb(void)
     nob_sb_append_cstr(&sb, ",\n    \"file\": ");
     sb_append_json_string(&sb, nob_temp_sprintf("%s/%s", dir, SOURCES[i]));
     nob_sb_append_cstr(&sb, ",\n    \"arguments\": [");
-    for (size_t j = 0; j < cmd.count; ++j)
-    {
+    for (size_t j = 0; j < cmd.count; ++j) {
       if (j > 0)
         nob_sb_append_cstr(&sb, ", ");
       sb_append_json_string(&sb, cmd.items[j]);
@@ -147,21 +134,17 @@ bool write_compdb(void)
   return ok;
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   NOB_GO_REBUILD_URSELF(argc, argv);
   bool DEBUG_MODE = false;
   bool TEST_MODE = false;
   bool RUN_MODE = false;
   bool COMPDB_MODE = false;
-  if (argc != 1)
-  {
-    if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)
-    {
+  if (argc != 1) {
+    if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
       print_help(argv[0]);
       return 0;
-    }
-    else if (strcmp(argv[1], "--debug") == 0 || strcmp(argv[1], "-d") == 0)
+    } else if (strcmp(argv[1], "--debug") == 0 || strcmp(argv[1], "-d") == 0)
       DEBUG_MODE = true;
     else if (strcmp(argv[1], "run") == 0)
       RUN_MODE = true;
@@ -169,15 +152,13 @@ int main(int argc, char **argv)
       TEST_MODE = true;
     else if (strcmp(argv[1], "compdb") == 0)
       COMPDB_MODE = true;
-    else
-    {
+    else {
       fprintf(stderr, "参数错误！\n");
       print_help(argv[0]);
       return 1;
     }
   }
-  if (COMPDB_MODE)
-  {
+  if (COMPDB_MODE) {
     printf("Now generating %s...\n", COMPDB_PATH);
     return write_compdb() ? 0 : 1;
   }
@@ -200,32 +181,26 @@ int main(int argc, char **argv)
   if (!write_compdb())
     nob_log(NOB_WARNING, "跳过 %s 的生成", COMPDB_PATH);
 
-  if (TEST_MODE)
-  {
+  if (TEST_MODE) {
     mkdir_if_not_exists(TEST_FOLDER);
     mkdir_if_not_exists(BUILD_FOLDER TEST_FOLDER);
     printf("\nNow running tests...\n");
     bool success = true;
     const char *test_dir = TEST_FOLDER;
-    if (!nob_walk_dir(test_dir, run_tests, .data = &success))
-    {
+    if (!nob_walk_dir(test_dir, run_tests, .data = &success)) {
       nob_log(NOB_ERROR, "Failed to walk through test directory: %s", test_dir);
       return 1;
     }
-    if (success)
-    {
+    if (success) {
       printf("\nAll tests passed!\n");
       return 0;
-    }
-    else
-    {
+    } else {
       printf("\nSome tests failed!\n");
       return 1;
     }
   }
 
-  if (RUN_MODE)
-  {
+  if (RUN_MODE) {
     printf("\nNow running soyocc...\n");
     nob_cmd_append(&cmd, BUILD_FOLDER "soyocc");
     for (int i = 2; i < argc; i++)

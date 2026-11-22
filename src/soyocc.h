@@ -1,17 +1,17 @@
 #include <ctype.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
-#include <stdbool.h>
 
 //
 // tokennize.c
 //
 // token 的种类
-typedef enum
-{
+typedef enum {
   TK_RESERVED, // 符号
+  TK_IDENT,    // 标识符
   TK_NUM,      // 整数
   TK_EOF,      // 输入结束
 } TokenKind;
@@ -20,8 +20,7 @@ typedef struct Token Token;
 // 解决 Token 结构体中 Token *next 的前向声明问题
 // https://zhuanlan.zhihu.com/p/675837704
 
-struct Token
-{
+struct Token {
   TokenKind kind; // token 的类型
   Token *next;    // 下一个输入的 token
   int val;        // kind 为 TK_NUM 时，token 对应的数值
@@ -33,6 +32,7 @@ void error_at(char *loc, char *fmt, ...);
 bool startswith(char *p, char *q);
 
 bool consume(char *op);
+Token *consume_ident();
 void expect(char *op);
 int expect_number();
 bool at_eof();
@@ -46,36 +46,39 @@ extern Token *token;
 // parse.c
 //
 
-typedef enum
-{
-  ND_ADD, // +
-  ND_SUB, // -
-  ND_MUL, // *
-  ND_DIV, // /
-  ND_EQ,  // ==
-  ND_NE,  // !=
-  ND_LT,  // <
-  ND_LE,  // <=
-  ND_NUM, // 整数
+typedef enum {
+  ND_ADD,    // +
+  ND_SUB,    // -
+  ND_MUL,    // *
+  ND_DIV,    // /
+  ND_EQ,     // ==
+  ND_NE,     // !=
+  ND_LT,     // <
+  ND_LE,     // <=
+  ND_NUM,    // 整数
+  ND_LVAR,   // 局部变量
+  ND_ASSIGN, // =
 } NodeKind;
 
 typedef struct Node Node;
 
-struct Node
-{
+extern Node *code[100];
+
+struct Node {
   NodeKind kind;
   Node *lhs;
   Node *rhs;
   int val;
+  int offset; // 局部变量的偏移量
 };
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 
-Node *expr();
+void program();
 
 //
 // codegen.c
 //
 
-void codegen(Node *node);
+void codegen();
