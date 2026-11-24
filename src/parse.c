@@ -39,6 +39,9 @@ Node *new_unary(NodeKind kind, Node *expr) {
 /**
  * program    = stmt*
  * stmt       = "return" expr ";" | expr ";"
+ *            | "if" "(" expr ")" stmt ("else" stmt)?
+ *            | "while" "(" expr ")" stmt
+ *            | "for" "(" expr? ";" expr? ";" expr? ")" stmt
  * expr       = assign
  * assign     = equality ("=" assign)?
  * equality   = relational ("==" relational | "!=" relational)*
@@ -76,6 +79,23 @@ Program *program() {
 
 Node *stmt() {
   Node *node;
+  if (consume("if")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    consume("(");
+    Node *cond = expr();
+    node->cond = cond;
+    consume(")");
+    Node *then_stmt = stmt();
+    if (consume("else")) {
+      Node *else_stmt = stmt();
+      node->then_stmt = then_stmt;
+      node->else_stmt = else_stmt;
+    } else {
+      node->then_stmt = then_stmt;
+    }
+    return node;
+  }
   if (consume("return"))
     node = new_unary(ND_RETURN, expr());
   else

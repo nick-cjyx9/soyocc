@@ -1,5 +1,6 @@
 #include "soyocc.h"
 #include <ctype.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,6 +79,22 @@ bool startswith(char *p, char *q) { return strncmp(p, q, strlen(q)) == 0; }
 bool is_ident1(char c) { return isalpha(c) || c == '_'; }
 bool is_ident2(char c) { return is_ident1(c) || isdigit(c); }
 
+char *startswith_reserved(char *p) {
+  // multi-character punctuators
+  static char *pt[] = {"==", "!=", "<=", ">="};
+  for (size_t i = 0; i < sizeof(pt) / sizeof(*pt); i++) {
+    if (startswith(p, pt[i]))
+      return pt[i];
+  }
+  // keywords
+  static char *kw[] = {"return", "if", "else"};
+  for (size_t i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
+    if (startswith(p, kw[i]) && !is_ident2(p[strlen(kw[i])]))
+      return kw[i];
+  }
+  return NULL;
+}
+
 // 分词
 Token *tokenize(char *p) {
   Token head;
@@ -89,15 +106,10 @@ Token *tokenize(char *p) {
       p++;
       continue;
     }
-    if (startswith(p, "return") && !is_ident2(p[6])) {
-      cur = new_token(TK_RESERVED, cur, p, 6);
-      p += 6;
-      continue;
-    }
-    if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "<=") ||
-        startswith(p, ">=")) {
-      cur = new_token(TK_RESERVED, cur, p, 2);
-      p += 2;
+    char *reserved = startswith_reserved(p);
+    if (reserved) {
+      cur = new_token(TK_RESERVED, cur, p, strlen(reserved));
+      p += strlen(reserved);
       continue;
     }
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||

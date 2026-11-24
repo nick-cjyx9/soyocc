@@ -1,6 +1,8 @@
 #include "soyocc.h"
 #include <stdio.h>
 
+int labelseq = 1;
+
 void gen(Node *node);
 
 void codegen(Program *prog) {
@@ -68,6 +70,29 @@ void gen(Node *node) {
     printf("  mov [rax], rdi\n");
     printf("  push rdi\n");
     return;
+  case ND_IF: {
+    int seq = labelseq++;
+    if (node->else_stmt) {
+      gen(node->cond);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .L.else.%d\n", seq);
+      gen(node->then_stmt);
+      printf("  jmp .L.end.%d\n", seq);
+      printf(".L.else.%d:\n", seq);
+      gen(node->else_stmt);
+      printf(".L.end.%d:\n", seq);
+    } else {
+      int seq = labelseq;
+      gen(node->cond);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .L.end.%d\n", seq);
+      gen(node->then_stmt);
+      printf(".L.end.%d:\n", seq);
+    }
+    return;
+  }
   }
   gen(node->lhs);
   gen(node->rhs);

@@ -66,20 +66,26 @@ typedef enum {
   ND_ASSIGN,    // =
   ND_RETURN,    // return
   ND_STMT_EXPR, // 表达式语句
+  ND_IF,        // if
 } NodeKind;
 
 typedef struct Node Node;
 
 struct Node {
   NodeKind kind;
-  Node *next; // 用链表存储语句
+  Node *next; // 用链表存储 statements
   Node *lhs;
   Node *rhs;
   int val;
   Var *var; // kind == ND_VAR 时，变量信息
+  // if
+  Node *cond;
+  Node *then_stmt;
+  Node *else_stmt;
 };
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
+Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
+Node *new_unary(NodeKind kind, Node *expr);
 Node *new_node_num(int val);
 
 typedef struct {
