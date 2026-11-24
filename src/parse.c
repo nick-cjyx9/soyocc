@@ -38,7 +38,8 @@ Node *new_unary(NodeKind kind, Node *expr) {
 
 /**
  * program    = stmt*
- * stmt       = "return" expr ";" | expr ";"
+ * stmt       = expr ";" | "{" stmt* "}" |
+ *            | "return" expr ";"
  *            | "if" "(" expr ")" stmt ("else" stmt)?
  *            | "while" "(" expr ")" stmt
  *            | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -79,6 +80,19 @@ Program *program() {
 
 Node *stmt() {
   Node *node;
+  if (consume("{")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_BLOCK;
+    Node head;
+    Node *cur = &head;
+    cur->next = NULL;
+    while (!consume("}")) {
+      cur->next = stmt();
+      cur = cur->next;
+    }
+    node->lhs = head.next;
+    return node;
+  }
   if (consume("if")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_IF;
@@ -123,8 +137,19 @@ Node *stmt() {
       consume(")");
     }
 
-    consume(")");
     node->loop_stmt = stmt();
+    return node;
+  }
+  if (consume("do")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    node->is_do_while = true;
+    node->loop_stmt = stmt();
+    expect("while");
+    consume("(");
+    node->cond = expr();
+    consume(")");
+    consume(";");
     return node;
   }
   if (consume("return"))

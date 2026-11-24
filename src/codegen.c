@@ -98,7 +98,7 @@ void gen(Node *node) {
     if (node->init)
       gen(node->init);
     printf(".L.begin.%d:\n", seq);
-    if (node->cond) {
+    if (node->cond && node->is_do_while == false) {
       gen(node->cond);
       printf("  pop rax\n");
       printf("  cmp rax, 0\n");
@@ -107,10 +107,20 @@ void gen(Node *node) {
     gen(node->loop_stmt);
     if (node->iter)
       gen(node->iter);
+    if (node->cond && node->is_do_while == true) {
+      gen(node->cond);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .L.end.%d\n", seq);
+    }
     printf("  jmp .L.begin.%d\n", seq);
     printf(".L.end.%d:\n", seq);
     return;
   }
+  case ND_BLOCK:
+    for (Node *n = node->lhs; n; n = n->next)
+      gen(n);
+    return;
   }
   gen(node->lhs);
   gen(node->rhs);

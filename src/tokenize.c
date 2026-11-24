@@ -87,7 +87,7 @@ char *startswith_reserved(char *p) {
       return pt[i];
   }
   // keywords
-  static char *kw[] = {"return", "if", "else", "while", "for"};
+  static char *kw[] = {"return", "if", "else", "while", "for", "do"};
   for (size_t i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
     if (startswith(p, kw[i]) && !is_ident2(p[strlen(kw[i])]))
       return kw[i];
@@ -112,8 +112,7 @@ Token *tokenize(char *p) {
       p += strlen(reserved);
       continue;
     }
-    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-        *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == ';') {
+    if (strchr("+-*/()<>;={}", *p)) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }

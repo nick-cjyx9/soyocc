@@ -66,6 +66,7 @@ typedef enum {
   ND_ASSIGN,    // =
   ND_RETURN,    // return
   ND_STMT_EXPR, // 表达式语句
+  ND_BLOCK,     // {} 包裹的语句块
   ND_IF,        // if
   ND_WHILE,     // while
 } NodeKind;
@@ -79,13 +80,16 @@ struct Node {
   Node *rhs;
   int val;
   Var *var; // kind == ND_VAR 时，变量信息
+
   // if
   Node *cond;
   Node *then_stmt;
   Node *else_stmt;
+
   // for/while/do...while
+  bool is_do_while;
   Node *init;
-  // Node *cond; 复用上面的
+  /* Node *cond; 复用上面的 */
   Node *iter;
   Node *loop_stmt;
 };
