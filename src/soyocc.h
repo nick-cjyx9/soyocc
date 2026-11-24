@@ -67,6 +67,7 @@ typedef enum {
   ND_RETURN,    // return
   ND_STMT_EXPR, // 表达式语句
   ND_IF,        // if
+  ND_WHILE,     // while
 } NodeKind;
 
 typedef struct Node Node;
@@ -82,6 +83,11 @@ struct Node {
   Node *cond;
   Node *then_stmt;
   Node *else_stmt;
+  // for/while/do...while
+  Node *init;
+  // Node *cond; 复用上面的
+  Node *iter;
+  Node *loop_stmt;
 };
 
 Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);

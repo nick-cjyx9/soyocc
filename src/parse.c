@@ -96,6 +96,37 @@ Node *stmt() {
     }
     return node;
   }
+  if (consume("while")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    consume("(");
+    node->cond = expr();
+    consume(")");
+    node->loop_stmt = stmt();
+    return node;
+  }
+  if (consume("for")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    consume("(");
+
+    if (!consume(";")) {
+      node->init = expr();
+      consume(";");
+    }
+    if (!consume(";")) {
+      node->cond = expr();
+      consume(";");
+    }
+    if (!consume(")")) {
+      node->iter = expr();
+      consume(")");
+    }
+
+    consume(")");
+    node->loop_stmt = stmt();
+    return node;
+  }
   if (consume("return"))
     node = new_unary(ND_RETURN, expr());
   else

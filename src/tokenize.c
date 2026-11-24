@@ -87,7 +87,7 @@ char *startswith_reserved(char *p) {
       return pt[i];
   }
   // keywords
-  static char *kw[] = {"return", "if", "else"};
+  static char *kw[] = {"return", "if", "else", "while", "for"};
   for (size_t i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
     if (startswith(p, kw[i]) && !is_ident2(p[strlen(kw[i])]))
       return kw[i];
