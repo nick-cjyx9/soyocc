@@ -89,6 +89,11 @@ Token *tokenize(char *p) {
       p++;
       continue;
     }
+    if (startswith(p, "return") && !is_ident2(p[6])) {
+      cur = new_token(TK_RESERVED, cur, p, 6);
+      p += 6;
+      continue;
+    }
     if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "<=") ||
         startswith(p, ">=")) {
       cur = new_token(TK_RESERVED, cur, p, 2);

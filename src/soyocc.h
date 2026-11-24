@@ -16,16 +16,6 @@ typedef struct Token Token;
 // 解决 Token 结构体中 Token *next 的前向声明问题
 // https://zhuanlan.zhihu.com/p/675837704
 
-typedef struct Var Var;
-
-// 局部变量的类型
-struct Var {
-  Var *next; // 用链表存变量
-  char *name;
-  int len;
-  int offset; // 相对 rbp 的偏移量
-};
-
 struct Token {
   TokenKind kind; // token 的类型
   Token *next;    // 下一个输入的 token
@@ -47,24 +37,35 @@ Token *tokenize(char *p);
 
 extern char *user_input;
 extern Token *token;
-extern Var *locals;
 
 //
 // parse.c
 //
 
+typedef struct Var Var;
+
+// 局部变量的类型
+struct Var {
+  Var *next; // 用链表存变量
+  char *name;
+  int len;
+  int offset; // 相对 rbp 的偏移量
+};
+
 typedef enum {
-  ND_ADD,    // +
-  ND_SUB,    // -
-  ND_MUL,    // *
-  ND_DIV,    // /
-  ND_EQ,     // ==
-  ND_NE,     // !=
-  ND_LT,     // <
-  ND_LE,     // <=
-  ND_NUM,    // 整数
-  ND_LVAR,   // 局部变量
-  ND_ASSIGN, // =
+  ND_ADD,       // +
+  ND_SUB,       // -
+  ND_MUL,       // *
+  ND_DIV,       // /
+  ND_EQ,        // ==
+  ND_NE,        // !=
+  ND_LT,        // <
+  ND_LE,        // <=
+  ND_NUM,       // 整数
+  ND_VAR,       // 局部变量
+  ND_ASSIGN,    // =
+  ND_RETURN,    // return
+  ND_STMT_EXPR, // 表达式语句
 } NodeKind;
 
 typedef struct Node Node;
@@ -75,7 +76,7 @@ struct Node {
   Node *lhs;
   Node *rhs;
   int val;
-  Var *var; // kind == ND_LVAR 时，变量信息
+  Var *var; // kind == ND_VAR 时，变量信息
 };
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
@@ -87,6 +88,7 @@ typedef struct {
   int stack_size;
 } Program;
 
+extern Var *locals;
 Program *program();
 
 //

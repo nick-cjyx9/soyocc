@@ -21,22 +21,19 @@ void codegen(Program *prog) {
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
   printf("  sub rsp, %d\n", prog->stack_size);
-  for (Node *t = prog->node; t; t = t->next) {
+  for (Node *t = prog->node; t; t = t->next)
     gen(t);
-    // 作为式子的求值结果，栈上应该留下一个值，
-    // 所以把它弹出，以免栈溢出
-    printf("  pop rax\n");
-  }
 
   // Epilogue
+  printf(".Lreturn:\n");
   printf("  mov rsp, rbp\n");
   printf("  pop rbp\n");
   printf("  ret\n");
 }
 
 void gen_lval(Node *node) {
-  if (node->kind != ND_LVAR)
-    error_at(&token->str[0], "左值不是变量");
+  if (node->kind != ND_VAR)
+    error_at(&token->str[0], "not an lvalue");
   printf("  lea rax, [rbp-%d]\n", node->var->offset);
   printf("  push rax\n");
 }
@@ -46,7 +43,18 @@ void gen(Node *node) {
   case ND_NUM:
     printf("  push %d\n", node->val);
     return;
-  case ND_LVAR:
+  case ND_STMT_EXPR:
+    gen(node->lhs);
+    // 只执行表达式的副作用，不需要保留表达式的计算结果。
+    // 调整栈指针丢弃计算结果
+    printf("  add rsp, 8\n");
+    return;
+  case ND_RETURN:
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  jmp .Lreturn\n");
+    return;
+  case ND_VAR:
     gen_lval(node);
     printf("  pop rax\n");
     printf("  mov rax, [rax]\n");
