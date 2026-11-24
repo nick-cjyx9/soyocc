@@ -3,7 +3,16 @@
 
 void gen(Node *node);
 
-void codegen() {
+void codegen(Program *prog) {
+  // 计算每个局部变量的偏移量和栈帧大小
+  int stack_size = 0;
+  for (Var *v = prog->locals; v; v = v->next) {
+    stack_size += 8;
+    v->offset = stack_size;
+  }
+  prog->stack_size = stack_size;
+
+  // 开始生成汇编
   printf(".intel_syntax noprefix\n");
   printf(".globl main\n");
   printf("main:\n");
@@ -11,9 +20,9 @@ void codegen() {
   // 确保 26 个变量的区域
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n");
-  for (int i = 0; code[i]; i++) {
-    gen(code[i]);
+  printf("  sub rsp, %d\n", prog->stack_size);
+  for (Node *t = prog->node; t; t = t->next) {
+    gen(t);
     // 作为式子的求值结果，栈上应该留下一个值，
     // 所以把它弹出，以免栈溢出
     printf("  pop rax\n");
@@ -28,8 +37,7 @@ void codegen() {
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR)
     error_at(&token->str[0], "左值不是变量");
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
+  printf("  lea rax, [rbp-%d]\n", node->var->offset);
   printf("  push rax\n");
 }
 
@@ -47,7 +55,6 @@ void gen(Node *node) {
   case ND_ASSIGN:
     gen_lval(node->lhs);
     gen(node->rhs);
-
     printf("  pop rdi\n");
     printf("  pop rax\n");
     printf("  mov [rax], rdi\n");

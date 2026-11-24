@@ -1,6 +1,5 @@
 #ifndef TEST_H
 #define TEST_H
-
 #include <stdio.h>
 
 // test runner run tests under root path, not relative to this file

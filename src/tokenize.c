@@ -1,4 +1,8 @@
 #include "soyocc.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 char *user_input;
 // 当前正在处理的 token
@@ -70,6 +74,10 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
 
 bool startswith(char *p, char *q) { return strncmp(p, q, strlen(q)) == 0; }
 
+// C 语言的变量名必须由字母、数字和下划线组成，且不能以数字开头
+bool is_ident1(char c) { return isalpha(c) || c == '_'; }
+bool is_ident2(char c) { return is_ident1(c) || isdigit(c); }
+
 // 分词
 Token *tokenize(char *p) {
   Token head;
@@ -92,15 +100,17 @@ Token *tokenize(char *p) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
-    if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++, 1);
-      continue;
-    }
-
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p, 0);
       cur->val = strtol(p, &p, 10);
       // strtol 会将 p 移动到未处理的第一个字符上，所以不需要手动移动 p
+      continue;
+    }
+    if (is_ident1(*p)) {
+      char *q = p;
+      while (is_ident2(*p))
+        p++;
+      cur = new_token(TK_IDENT, cur, q, p - q);
       continue;
     }
     error_at(p, "无法识别的 token: '%c'", *p);

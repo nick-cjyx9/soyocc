@@ -1,7 +1,18 @@
 #include "soyocc.h"
 #include <stdlib.h>
+#include <string.h>
 
-Node *code[100];
+Var *locals;
+
+// 按名字检索变量。找不到返回 NULL
+Var *find_var(Token *tok) {
+  for (Var *t = locals; t; t = t->next) {
+    if (t->len == tok->len && !memcmp(tok->str, t->name, tok->len)) {
+      return t;
+    }
+  }
+  return NULL;
+}
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
@@ -41,11 +52,19 @@ Node *mul();
 Node *unary();
 Node *primary();
 
-void program() {
-  int i = 0;
-  while (!at_eof())
-    code[i++] = stmt();
-  code[i] = NULL;
+Program *program() {
+  Node head;
+  head.next = NULL;
+  Node *cur = &head;
+  locals = NULL;
+  while (!at_eof()) {
+    cur->next = stmt();
+    cur = cur->next;
+  }
+  Program *prog = calloc(1, sizeof(Program));
+  prog->node = head.next;
+  prog->locals = locals;
+  return prog;
 }
 
 Node *stmt() {
@@ -123,6 +142,15 @@ Node *unary() {
   return primary();
 }
 
+Var *push_var(Token *tok) {
+  Var *var = calloc(1, sizeof(Var));
+  var->next = locals;
+  var->name = tok->str;
+  var->len = tok->len;
+  locals = var;
+  return var;
+}
+
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -131,11 +159,13 @@ Node *primary() {
   }
   Token *tok = consume_ident();
   if (tok) {
+    Var *var = find_var(tok);
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
-    // 目前，局部变量处在由名字决定的固定位置
-    /* printf("token->str[0]: %c offset: %d\n", tok->str[0], node->offset); */
+    if (var)
+      node->var = var;
+    else
+      node->var = push_var(tok);
     return node;
   }
   return new_node_num(expect_number());

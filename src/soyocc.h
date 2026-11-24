@@ -1,9 +1,5 @@
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 //
 // tokennize.c
@@ -19,6 +15,16 @@ typedef enum {
 typedef struct Token Token;
 // 解决 Token 结构体中 Token *next 的前向声明问题
 // https://zhuanlan.zhihu.com/p/675837704
+
+typedef struct Var Var;
+
+// 局部变量的类型
+struct Var {
+  Var *next; // 用链表存变量
+  char *name;
+  int len;
+  int offset; // 相对 rbp 的偏移量
+};
 
 struct Token {
   TokenKind kind; // token 的类型
@@ -41,6 +47,7 @@ Token *tokenize(char *p);
 
 extern char *user_input;
 extern Token *token;
+extern Var *locals;
 
 //
 // parse.c
@@ -62,23 +69,28 @@ typedef enum {
 
 typedef struct Node Node;
 
-extern Node *code[100];
-
 struct Node {
   NodeKind kind;
+  Node *next; // 用链表存储语句
   Node *lhs;
   Node *rhs;
   int val;
-  int offset; // 局部变量的偏移量
+  Var *var; // kind == ND_LVAR 时，变量信息
 };
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 
-void program();
+typedef struct {
+  Node *node;
+  Var *locals;
+  int stack_size;
+} Program;
+
+Program *program();
 
 //
 // codegen.c
 //
 
-void codegen();
+void codegen(Program *prog);
