@@ -50,7 +50,7 @@ Node *new_unary(NodeKind kind, Node *expr) {
  * add        = mul ("+" mul | "-" mul)*
  * mul        = unary ("*" unary | "/" unary)*
  * unary      = ("+" | "-")? primary
- * primary    = num | ident | "(" expr ")"
+ * primary    = num | ident ("(" expr() ( "," expr())* ")")? | "(" expr ")"
  */
 
 Node *stmt();
@@ -246,8 +246,26 @@ Node *primary() {
   }
   Token *tok = consume_ident();
   if (tok) {
-    Var *var = find_var(tok);
     Node *node = calloc(1, sizeof(Node));
+    // 如果是函数调用
+    if (consume("(")) {
+      if (!consume(")")) {
+        Node *args_head = expr();
+        Node *cur = args_head;
+        while (consume(",")) {
+          cur->next = expr();
+          cur = cur->next;
+          cur->next = NULL;
+        }
+        consume(")");
+        node->args = args_head;
+      }
+      node->kind = ND_FUNC_CALL;
+      node->func_name = strndup(tok->str, tok->len);
+      return node;
+    }
+    // 如果是变量
+    Var *var = find_var(tok);
     node->kind = ND_VAR;
     if (var)
       node->var = var;

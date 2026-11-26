@@ -3,6 +3,8 @@
 
 int labelseq = 1;
 
+char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 void gen(Node *node);
 
 void codegen(Program *prog) {
@@ -121,6 +123,20 @@ void gen(Node *node) {
     for (Node *n = node->lhs; n; n = n->next)
       gen(n);
     return;
+  case ND_FUNC_CALL: {
+    // https://x86-64-assembly.readthedocs.io/zh-cn/latest/chapter_04_subroutines/01_calling_conventions.html
+    int n = 0;
+    for (Node *arg = node->args; arg; arg = arg->next, n++)
+      gen(arg);
+    if (n > 6)
+      error_at(&token->str[0], "目前只支持最多 6 个参数");
+    for (int i = n - 1; i >= 0; i--)
+      printf("  pop %s\n", argreg[i]);
+    // 正序建链表，顺序入栈，后进先出
+    printf("  call %s\n", node->func_name);
+    printf("  push rax\n");
+    return;
+  }
   }
   gen(node->lhs);
   gen(node->rhs);

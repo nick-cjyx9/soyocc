@@ -69,6 +69,7 @@ typedef enum {
   ND_BLOCK,     // {} 包裹的语句块
   ND_IF,        // if
   ND_WHILE,     // while
+  ND_FUNC_CALL, // 函数调用
 } NodeKind;
 
 typedef struct Node Node;
@@ -92,6 +93,10 @@ struct Node {
   /* Node *cond; 复用上面的 */
   Node *iter;
   Node *loop_stmt;
+
+  // ND_FUNC_CALL
+  char *func_name;
+  Node *args; // 用链表存储
 };
 
 Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
