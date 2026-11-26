@@ -131,9 +131,25 @@ void gen(Node *node) {
     if (n > 6)
       error_at(&token->str[0], "目前只支持最多 6 个参数");
     for (int i = n - 1; i >= 0; i--)
+      // 正序建链表，顺序入栈，后进先出
       printf("  pop %s\n", argreg[i]);
-    // 正序建链表，顺序入栈，后进先出
+    /**
+     * System V ABI 规定 rsp 在 call 之前必须是 16 字节对齐的
+     * 由于 call 会压入 8 字节的返回地址
+     * 所以在 call 之前 rsp 必须是 8 的倍数，这里做动态调整和恢复
+     * TODO 通过编译器维护一个栈深度计数器来计算补齐，避免动态调整
+     */
+    printf("  mov rax, rsp\n");
+    printf("  and rax, 15\n");
+    // 15 = 0b1111
+    printf("  jz .L.call.rsp_aligned\n");
+    printf("  sub rsp, 8\n");
     printf("  call %s\n", node->func_name);
+    printf("  add rsp, 8\n");
+    printf("  jmp .L.call.done\n");
+    printf(".L.call.rsp_aligned:\n");
+    printf("  call %s\n", node->func_name);
+    printf(".L.call.done\n");
     printf("  push rax\n");
     return;
   }
